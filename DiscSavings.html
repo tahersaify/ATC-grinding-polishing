@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Disc Cost & Savings Analysis (A vs B)</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background:#0b0f17; color:#eaf0ff; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 22px; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .sub { margin: 0 0 16px; color:#b8c4e6; }
+    .card { background:#121a2b; border:1px solid #233055; border-radius:14px; padding:14px; margin-top:12px; }
+    .card h2 { margin: 0 0 10px; font-size: 16px; }
+    label { display:block; font-size:12px; color:#b8c4e6; margin-bottom:6px; }
+    input {
+      width:100%; box-sizing:border-box; padding:10px;
+      border-radius:10px; border:1px solid #2a3a66;
+      background:#0c1222; color:#eaf0ff; outline:none;
+    }
+    input:focus { border-color:#6aa7ff; }
+    .row { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
+    @media (max-width: 760px){ .row { grid-template-columns: 1fr; } }
+    .out { margin-top: 12px; background:#0c1222; border:1px solid #233055; border-radius:12px; padding:12px; }
+    .kpis { display:grid; grid-template-columns: 1fr; gap:10px; }
+    @media (min-width: 760px){ .kpis { grid-template-columns: 1fr 1fr 1fr; } }
+    .k { background:#101a33; border:1px solid #233055; border-radius:12px; padding:10px; }
+    .t { font-size:12px; color:#b8c4e6; }
+    .v { font-size:18px; margin-top:4px; }
+    .msg { margin-top:10px; font-size:12px; }
+    .err { color:#ff9aa8; }
+    .ok { color:#9dffb2; }
+    .tiny { color:#b8c4e6; font-size:12px; margin-top:10px; line-height:1.35; }
+    code { color:#cfe3ff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid #233055; text-align: left; font-size: 13px; vertical-align: top; }
+    th { color:#b8c4e6; font-weight: 600; }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Disc Cost & Savings Analysis</h1>
+    <p class="sub">
+      Enter run time + material removed + disc cost. We compute MRR, cost per gram, and efficiency of Disc A vs Disc B.
+    </p>
+
+    <div class="card">
+      <h2>Inputs</h2>
+      <div class="row">
+        <div>
+          <label>Run time Disc A (min)</label>
+          <input id="tA" type="number" step="0.001" value="5">
+        </div>
+        <div>
+          <label>Material removed Disc A (g)</label>
+          <input id="mA" type="number" step="0.001" value="187">
+        </div>
+        <div>
+          <label>Cost of Disc A (AED)</label>
+          <input id="cA" type="number" step="0.01" value="0">
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Run time Disc B (min)</label>
+          <input id="tB" type="number" step="0.001" value="5">
+        </div>
+        <div>
+          <label>Material removed Disc B (g)</label>
+          <input id="mB" type="number" step="0.001" value="63">
+        </div>
+        <div>
+          <label>Cost of Disc B (AED)</label>
+          <input id="cB" type="number" step="0.01" value="0">
+        </div>
+      </div>
+
+      <div id="status" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Results</h2>
+      <div class="out">
+        <div class="kpis">
+          <div class="k">
+            <div class="t">MRR A (g/min)</div>
+            <div class="v" id="mrrA">—</div>
+          </div>
+          <div class="k">
+            <div class="t">MRR B (g/min)</div>
+            <div class="v" id="mrrB">—</div>
+          </div>
+          <div class="k">
+            <div class="t">Speed ratio (A ÷ B)</div>
+            <div class="v" id="speedRatio">—</div>
+          </div>
+        </div>
+
+        <div class="kpis" style="margin-top:10px;">
+          <div class="k">
+            <div class="t">Cost per gram A (AED/g)</div>
+            <div class="v" id="cpgA">—</div>
+          </div>
+          <div class="k">
+            <div class="t">Cost per gram B (AED/g)</div>
+            <div class="v" id="cpgB">—</div>
+          </div>
+          <div class="k">
+            <div class="t">Cost efficiency gain (A vs B)</div>
+            <div class="v" id="costEff">—</div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Efficiency metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Disc A is faster than Disc B by (%)</td>
+              <td id="fasterPct">—</td>
+            </tr>
+            <tr>
+              <td>Disc A removes more per minute than B by (%)</td>
+              <td id="mrrPct">—</td>
+            </tr>
+            <tr>
+              <td>Disc A is cheaper per gram than B by (%)</td>
+              <td id="cheaperPct">—</td>
+            </tr>
+            <tr>
+              <td>Disc A cost efficiency vs B (times)</td>
+              <td id="costTimes">—</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tiny">
+          <div><code>MRR = MaterialRemoved / Time</code></div>
+          <div><code>Cost per gram = DiscCost / MaterialRemoved</code></div>
+          <div><code>Speed ratio = MRR_A / MRR_B</code></div>
+          <div><code>Cheaper % = (1 - (CPG_A / CPG_B)) × 100</code></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  function n(id){
+    const v = parseFloat($(id).value);
+    return Number.isFinite(v) ? v : NaN;
+  }
+  function fmt(x, d=2){
+    if (!Number.isFinite(x)) return "—";
+    const p = 10 ** d;
+    return (Math.round(x*p)/p).toFixed(d);
+  }
+  function pct(x, d=1){
+    if (!Number.isFinite(x)) return "—";
+    return fmt(x, d) + "%";
+  }
+
+  function update(){
+    const tA = n("tA"), mA = n("mA"), cA = n("cA");
+    const tB = n("tB"), mB = n("mB"), cB = n("cB");
+
+    const status = $("status");
+    const ok =
+      Number.isFinite(tA) && tA > 0 &&
+      Number.isFinite(mA) && mA >= 0 &&
+      Number.isFinite(tB) && tB > 0 &&
+      Number.isFinite(mB) && mB >= 0 &&
+      Number.isFinite(cA) && cA >= 0 &&
+      Number.isFinite(cB) && cB >= 0;
+
+    if (!ok){
+      status.className = "msg err";
+      status.textContent = "Please enter valid numbers: time > 0, material ≥ 0, cost ≥ 0.";
+    } else {
+      status.className = "msg ok";
+      status.textContent = "Calculated automatically as you type.";
+    }
+
+    // MRR
+    const mrrA = (Number.isFinite(mA) && Number.isFinite(tA) && tA > 0) ? (mA / tA) : NaN;
+    const mrrB = (Number.isFinite(mB) && Number.isFinite(tB) && tB > 0) ? (mB / tB) : NaN;
+
+    $("mrrA").textContent = fmt(mrrA, 2);
+    $("mrrB").textContent = fmt(mrrB, 2);
+
+    // Speed ratio & faster %
+    const speedRatio = (Number.isFinite(mrrA) && Number.isFinite(mrrB) && mrrB > 0) ? (mrrA / mrrB) : NaN;
+    $("speedRatio").textContent = Number.isFinite(speedRatio) ? (fmt(speedRatio, 2) + "×") : "—";
+
+    // “how much more efficient” (speed)
+    // If ratio=2 -> 100% faster (i.e., (2-1)*100)
+    const fasterPct = Number.isFinite(speedRatio) ? ((speedRatio - 1) * 100) : NaN;
+    $("fasterPct").textContent = pct(fasterPct, 1);
+
+    // Also show same as MRR improvement (same meaning)
+    $("mrrPct").textContent = pct(fasterPct, 1);
+
+    // Cost per gram
+    const cpgA = (Number.isFinite(cA) && Number.isFinite(mA) && mA > 0) ? (cA / mA) : NaN;
+    const cpgB = (Number.isFinite(cB) && Number.isFinite(mB) && mB > 0) ? (cB / mB) : NaN;
+
+    $("cpgA").textContent = fmt(cpgA, 6);
+    $("cpgB").textContent = fmt(cpgB, 6);
+
+    // Cheaper % (positive means A is cheaper than B)
+    const cheaperPct = (Number.isFinite(cpgA) && Number.isFinite(cpgB) && cpgB > 0)
+      ? ((1 - (cpgA / cpgB)) * 100)
+      : NaN;
+    $("cheaperPct").textContent = pct(cheaperPct, 1);
+
+    // Cost efficiency (times): how many times better is A than B in AED/g terms
+    // If cpgA is half of cpgB => 2× better
+    const costTimes = (Number.isFinite(cpgA) && Number.isFinite(cpgB) && cpgA > 0)
+      ? (cpgB / cpgA)
+      : NaN;
+    $("costTimes").textContent = Number.isFinite(costTimes) ? (fmt(costTimes, 2) + "×") : "—";
+
+    // Combined “cost efficiency gain” display: times + %
+    let costEffText = "—";
+    if (Number.isFinite(costTimes) && Number.isFinite(cheaperPct)) {
+      costEffText = `${fmt(costTimes,2)}× (${pct(cheaperPct,1)} cheaper)`;
+    } else if (Number.isFinite(costTimes)) {
+      costEffText = `${fmt(costTimes,2)}×`;
+    } else if (Number.isFinite(cheaperPct)) {
+      costEffText = `${pct(cheaperPct,1)} cheaper`;
+    }
+    $("costEff").textContent = costEffText;
+  }
+
+  ["tA","mA","cA","tB","mB","cB"].forEach(id => {
+    $(id).addEventListener("input", update);
+  });
+
+  update();
+</script>
+</body>
+</html>
+
